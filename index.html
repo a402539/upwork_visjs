@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>upwork: Loading and merging of vis.js Datasets</title>
+
+    <style type="text/css">
+<!--
+      html,
+      body {
+        font: 11pt arial;
+      }
+
+      h1 {
+        font-size: 150%;
+        margin: 5px 0;
+      }
+
+      h2 {
+        font-size: 100%;
+        margin: 5px 0;
+      }
+
+      table.view {
+        width: 100%;
+      }
+
+      table td {
+        vertical-align: top;
+      }
+
+      table table {
+        background-color: #f5f5f5;
+        border: 1px solid #e5e5e5;
+      }
+
+      table table td {
+        vertical-align: middle;
+      }
+
+      input[type="text"],
+      pre {
+        border: 1px solid lightgray;
+      }
+
+      pre {
+        margin: 0;
+        padding: 5px;
+        font-size: 10pt;
+      }
+-->
+
+      #mynetwork {
+        width: 100%;
+        height: 600px;
+        border: 1px solid lightgray;
+      }
+    </style>
+
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"
+      //"../../../standalone/umd/vis-network.min.js"
+    ></script>
+
+    <script type="text/javascript" src="Sample_DataSets.js"></script>
+
+    <script type="text/javascript">
+      var nodes, edges, network;
+
+      // convenience method to stringify a JSON object
+      function toJSON(obj) {
+        return JSON.stringify(obj, null, 4);
+      }
+
+      function addNode() {
+        try {
+          nodes.add({
+            id: document.getElementById("node-id").value,
+            label: document.getElementById("node-label").value,
+          });
+        } catch (err) {
+          alert(err);
+        }
+      }
+
+      function updateNode() {
+        try {
+          nodes.update({
+            id: document.getElementById("node-id").value,
+            label: document.getElementById("node-label").value,
+          });
+        } catch (err) {
+          alert(err);
+        }
+      }
+      function removeNode() {
+        try {
+          nodes.remove({ id: document.getElementById("node-id").value });
+        } catch (err) {
+          alert(err);
+        }
+      }
+
+      function addEdge() {
+        try {
+          edges.add({
+            id: document.getElementById("edge-id").value,
+            from: document.getElementById("edge-from").value,
+            to: document.getElementById("edge-to").value,
+          });
+        } catch (err) {
+          alert(err);
+        }
+      }
+      function updateEdge() {
+        try {
+          edges.update({
+            id: document.getElementById("edge-id").value,
+            from: document.getElementById("edge-from").value,
+            to: document.getElementById("edge-to").value,
+          });
+        } catch (err) {
+          alert(err);
+        }
+      }
+      function removeEdge() {
+        try {
+          edges.remove({ id: document.getElementById("edge-id").value });
+        } catch (err) {
+          alert(err);
+        }
+      }
+
+      function draw() {
+        //+ Clicking Button 1: Parent nodes are Colleges > Schools > Degrees.
+        //- Clicking Button 2: Parent nodes are relatedFunctions > Degrees > Courses
+        //- Clicking Button 3: Parent nodes are Courses > Degrees they're found in
+        // create an array with nodes
+        nodes = new vis.DataSet();
+        // create an array with edges
+        edges = new vis.DataSet();
+
+        var nod = {};
+        courseDataSet.forEach(a => {nod[a.label] = 1; nod[a.courseOwner] = 1});
+        degreeDataSet.forEach(a => {nod[a.label] = 1; nod[a.degreeOwner] = 1});
+        collegeDataSet.forEach(a => {
+          nod[a.label] = 1;
+          Object.values(a.relatedSchools).forEach(b => {nod[b] = 1;});
+        });
+        nodes.add(Object.keys(nod).map(a => { return {'id': a, 'label': a} } ));
+
+        var edges_id = 0;
+        degreeDataSet.forEach(a => edges.add({'id': ++edges_id, 'from': a.label, 'to': a.degreeOwner}));
+        collegeDataSet.forEach(a => {
+          Object.values(a.relatedSchools).forEach(b => {
+              edges.add({'id': ++edges_id, 'from': a.label, 'to': b});
+          });
+        });
+
+        // create a network
+        var container = document.getElementById("mynetwork");
+        var data = {
+          nodes: nodes,
+          edges: edges,
+        };
+        var options = {};
+        network = new vis.Network(container, data, options);
+      }
+    </script>
+  </head>
+
+  <body onload="draw();">
+    <h2><center>
+      upwork <a href="https://www.upwork.com/jobs/Loading-and-merging-vis-Datasets_~018eae04fdf559031b/">Loading and merging of vis.js Datasets</a>
+    </center></h2>
+    <hr>
+        <div id="mynetwork"></div>
+  </body>
+</html>
